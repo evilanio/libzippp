@@ -161,7 +161,7 @@ int ZipEntry::readContent(std::ostream& ofOutput, ZipArchive::State state, libzi
    return zipFile->readEntry(*this, ofOutput, state, chunksize);
 }
 
-ZipArchive::ZipArchive(const string& zipPath, const string& password, Encryption encryptionMethod) : path(zipPath), zipHandle(nullptr), zipSource(nullptr), mode(NotOpen), password(password), progressPrecision(LIBZIPPP_DEFAULT_PROGRESSION_PRECISION), bufferData(nullptr), bufferLength(0), useArchiveCompressionMethod(false), compressionMethod(ZIP_CM_DEFAULT), errorHandlingCallback(defaultErrorHandler) {
+ZipArchive::ZipArchive(const string& zipPath, const string& password, Encryption encryptionMethod) : path(zipPath), zipHandle(nullptr), zipSource(nullptr), mode(NotOpen), password(password), progressPrecision(LIBZIPPP_DEFAULT_PROGRESSION_PRECISION), bufferData(nullptr), bufferLength(0), useArchiveCompressionMethod(false), compressionMethod(ZIP_CM_DEFAULT), errorHandlingCallback(defaultErrorHandler), progressReadCallback(nullptr) {
     switch(encryptionMethod) {
 #ifdef LIBZIPPP_WITH_ENCRYPTION
         case Encryption::Aes128:
@@ -192,6 +192,10 @@ ZipArchive::~ZipArchive(void) {
     zipSource = nullptr;
     bufferData = nullptr;
     listeners.clear();
+    if (progressReadCallback) {
+        delete progressReadCallback;
+        progressReadCallback = nullptr;
+    }
 }
 
 void ZipArchive::free(ZipArchive* archive) {
@@ -878,7 +882,7 @@ int ZipArchive::readEntry(const ZipEntry& zipEntry, std::function<bool(const voi
     if (zipFile) {
         libzippp_uint64 maxSize = zipEntry.getSize();
         if (!chunksize) { chunksize = LIBZIPPP_DEFAULT_CHUNK_SIZE; } // use the default chunk size (512K) if not specified by the user
-    
+        if (progressReadCallback) progressReadCallback(maxSize,0);
         if (maxSize<chunksize) {
             char* data = NEW_CHAR_ARRAY(maxSize)
             if (data!=nullptr) {
@@ -914,6 +918,7 @@ int ZipArchive::readEntry(const ZipEntry& zipEntry, std::function<bool(const voi
                                 break;
                             }
                             uWrittenBytes += result;
+                            if (progressReadCallback) progressReadCallback(maxSize,uWrittenBytes);
                         }
                     } else {
                         iRes = LIBZIPPP_ERROR_FREAD_FAILURE;
@@ -952,6 +957,7 @@ int ZipArchive::readEntry(const ZipEntry& zipEntry, std::function<bool(const voi
                 delete[] data;
             }
         }
+        if (progressReadCallback && iRes == LIBZIPPP_OK) progressReadCallback(maxSize,maxSize);
         zip_fclose(zipFile);
     } else {
        iRes = LIBZIPPP_ERROR_FOPEN_FAILURE;

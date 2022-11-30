@@ -6,3 +6,4 @@ test_shared
 libzippp-Makefile.mk
 *.a
 *.so
+*.vscode

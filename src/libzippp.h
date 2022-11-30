@@ -140,6 +140,7 @@ namespace libzippp {
                                                     int zip_error_code,
                                                     int system_error_code)>;
 
+    using ProgressReadCallback = std::function<void(int total, int read)>;
     /**
      * Represents a ZIP archive. This class provides useful methods to handle an archive
      * content. It is simply a wrapper around libzip.
@@ -569,6 +570,10 @@ namespace libzippp {
            errorHandlingCallback = callback;
         }
 
+        void setProgressReadCallback(const ProgressReadCallback* callback) {
+            progressReadCallback = callback;
+        }
+
         void setCompressionMethod(CompressionMethod comp);
 
     private:
@@ -580,6 +585,8 @@ namespace libzippp {
         int encryptionMethod;
         std::vector<ZipProgressListener*> listeners;
         double progressPrecision;
+
+        ProgressReadCallback* progressReadCallback;
         
         void** bufferData;
         libzippp_uint64 bufferLength;
