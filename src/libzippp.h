@@ -570,7 +570,7 @@ namespace libzippp {
            errorHandlingCallback = callback;
         }
 
-        void setProgressReadCallback(const ProgressReadCallback* callback) {
+        void setProgressReadCallback(const ProgressReadCallback& callback) {
             progressReadCallback = callback;
         }
 
@@ -586,7 +586,7 @@ namespace libzippp {
         std::vector<ZipProgressListener*> listeners;
         double progressPrecision;
 
-        ProgressReadCallback* progressReadCallback;
+        ProgressReadCallback progressReadCallback;
         
         void** bufferData;
         libzippp_uint64 bufferLength;
