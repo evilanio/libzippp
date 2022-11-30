@@ -140,7 +140,7 @@ namespace libzippp {
                                                     int zip_error_code,
                                                     int system_error_code)>;
 
-    using ProgressReadCallback = std::function<void(int total, int read)>;
+    using ProgressReadCallback = std::function<void(libzippp_uint64 total, libzippp_uint64 read)>;
     /**
      * Represents a ZIP archive. This class provides useful methods to handle an archive
      * content. It is simply a wrapper around libzip.
