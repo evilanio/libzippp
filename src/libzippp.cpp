@@ -878,7 +878,10 @@ int ZipArchive::readEntry(const ZipEntry& zipEntry, std::function<bool(const voi
     if (zipFile) {
         libzippp_uint64 maxSize = zipEntry.getSize();
         if (!chunksize) { chunksize = LIBZIPPP_DEFAULT_CHUNK_SIZE; } // use the default chunk size (512K) if not specified by the user
-        if (progressReadCallback != nullptr) progressReadCallback(maxSize,0);
+        if (progressReadCallback != nullptr && progressReadCallback(maxSize,0)) {
+            zip_fclose(zipFile);
+            return LIBZIPPP_READ_CANCEL;
+        }
         if (maxSize<chunksize) {
             char* data = NEW_CHAR_ARRAY(maxSize)
             if (data!=nullptr) {
@@ -914,7 +917,10 @@ int ZipArchive::readEntry(const ZipEntry& zipEntry, std::function<bool(const voi
                                 break;
                             }
                             uWrittenBytes += result;
-                            if (progressReadCallback != nullptr) progressReadCallback(maxSize,uWrittenBytes);
+                            if (progressReadCallback != nullptr && progressReadCallback(maxSize,uWrittenBytes)){
+                                iRes = LIBZIPPP_READ_CANCEL;
+                                break;
+                            }
                         }
                     } else {
                         iRes = LIBZIPPP_ERROR_FREAD_FAILURE;

@@ -82,6 +82,7 @@ struct zip_source;
 
 // special return code for libzippp
 #define LIBZIPPP_OK 0
+#define LIBZIPPP_READ_CANCEL 1
 #define LIBZIPPP_ERROR_NOT_OPEN -1
 #define LIBZIPPP_ERROR_NOT_ALLOWED -2
 #define LIBZIPPP_ERROR_INVALID_ENTRY -3
@@ -140,7 +141,11 @@ namespace libzippp {
                                                     int zip_error_code,
                                                     int system_error_code)>;
 
-    using ProgressReadCallback = std::function<void(libzippp_uint64 total, libzippp_uint64 read)>;
+    /**
+     * Callback for read zip file on stream.
+     * Return 0 for to continue reading and 1 stop;
+     */
+    using ProgressReadCallback = std::function<int(libzippp_uint64 total, libzippp_uint64 read)>;
     /**
      * Represents a ZIP archive. This class provides useful methods to handle an archive
      * content. It is simply a wrapper around libzip.
